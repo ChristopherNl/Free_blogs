@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Gérer mes cookies - Mon Blog Libre</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<header>
+			<h1>Gérer mes cookies</h1>
+			<nav>
+				<a href="index.html">Accueil</a>
+				<a href="mentions-legales.html">Mentions légales</a>
+				<a href="confidentialite.html">Confidentialité</a>
+				<a href="cookies.html">Cookies</a>
+				<a href="cgu.html">CGU</a>
+			</nav>
+		</header>
+
+		<main>
+			<article>
+				<h2>Votre choix actuel</h2>
+				<p id="current-choice">Chargement…</p>
+
+				<h2>Modifier votre choix</h2>
+				<p>
+					Vous pouvez à tout moment accepter ou refuser le stockage local
+					utilisé par ce blog. Votre choix sera conservé pendant 6 mois.
+				</p>
+
+				<div
+					class="cookie-buttons"
+					style="justify-content: flex-start; margin-top: 15px">
+					<button id="btn-accept" class="btn-accept">Tout accepter</button>
+					<button id="btn-refuse" class="btn-refuse">Tout refuser</button>
+				</div>
+
+				<h2>Supprimer ma préférence</h2>
+				<p>
+					Si vous souhaitez repartir de zéro, vous pouvez effacer votre
+					préférence enregistrée. Le bandeau de consentement vous sera alors
+					présenté à nouveau lors de votre prochaine visite.
+				</p>
+				<p>
+					<button
+						id="btn-reset"
+						style="
+							padding: 10px 25px;
+							cursor: pointer;
+							background: #c0392b;
+							color: white;
+							border: none;
+							border-radius: 4px;
+							font-weight: bold;
+						">
+						Effacer ma préférence
+					</button>
+				</p>
+
+				<h2>En savoir plus</h2>
+				<p>
+					Pour le détail des stockages utilisés, consultez notre
+					<a href="cookies.html">Politique de cookies</a>. Pour vos droits RGPD,
+					voir la
+					<a href="confidentialite.html">Politique de confidentialité</a>.
+				</p>
+			</article>
+		</main>
+
+		<footer>
+			<p>&copy; 2026 Mon Blog Libre.</p>
+			<nav class="footer-links">
+				<a href="mentions-legales.html">Mentions légales</a>
+				<a href="confidentialite.html">Confidentialité</a>
+				<a href="cookies.html">Cookies</a>
+				<a href="cgu.html">CGU</a>
+				<a href="gerer-cookies.html">Gérer mes cookies</a>
+			</nav>
+		</footer>
+
+		<script>
+			const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
+			const KEY_CHOICE = "cookieChoice";
+			const KEY_DATE = "cookieChoiceDate";
+
+			function getChoiceStatus() {
+				const choice = localStorage.getItem(KEY_CHOICE);
+				const dateStr = localStorage.getItem(KEY_DATE);
+
+				if (!choice || !dateStr) {
+					return { status: "none" };
+				}
+
+				const choiceDate = parseInt(dateStr, 10);
+				const now = Date.now();
+
+				if (now - choiceDate > SIX_MONTHS_MS) {
+					localStorage.removeItem(KEY_CHOICE);
+					localStorage.removeItem(KEY_DATE);
+					return { status: "expired" };
+				}
+
+				const expiryDate = new Date(choiceDate + SIX_MONTHS_MS);
+				return {
+					status: choice,
+					date: new Date(choiceDate),
+					expiry: expiryDate,
+				};
+			}
+
+			function formatDate(d) {
+				return d.toLocaleDateString("fr-FR", {
+					day: "2-digit",
+					month: "long",
+					year: "numeric",
+				});
+			}
+
+			function refreshDisplay() {
+				const el = document.getElementById("current-choice");
+				const info = getChoiceStatus();
+
+				if (info.status === "none") {
+					el.textContent =
+						"Aucun choix enregistré. Le bandeau de consentement vous sera présenté lors de votre prochaine visite.";
+				} else if (info.status === "expired") {
+					el.textContent =
+						"Votre choix précédent a expiré (plus de 6 mois). Le bandeau vous sera présenté à nouveau lors de votre prochaine visite.";
+				} else if (info.status === "accepted") {
+					el.textContent =
+						"Vous avez accepté le stockage local le " +
+						formatDate(info.date) +
+						". Ce choix est valable jusqu'au " +
+						formatDate(info.expiry) +
+						".";
+				} else if (info.status === "refused") {
+					el.textContent =
+						"Vous avez refusé le stockage local le " +
+						formatDate(info.date) +
+						". Ce choix est valable jusqu'au " +
+						formatDate(info.expiry) +
+						".";
+				}
+			}
+
+			function saveChoice(value) {
+				localStorage.setItem(KEY_CHOICE, value);
+				localStorage.setItem(KEY_DATE, Date.now().toString());
+				refreshDisplay();
+			}
+
+			document
+				.getElementById("btn-accept")
+				.addEventListener("click", () => saveChoice("accepted"));
+			document
+				.getElementById("btn-refuse")
+				.addEventListener("click", () => saveChoice("refused"));
+			document.getElementById("btn-reset").addEventListener("click", () => {
+				localStorage.removeItem(KEY_CHOICE);
+				localStorage.removeItem(KEY_DATE);
+				refreshDisplay();
+			});
+
+			refreshDisplay();
+		</script>
+	</body>
+</html>
